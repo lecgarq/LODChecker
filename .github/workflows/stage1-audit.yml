@@ -1,0 +1,38 @@
+name: stage1-audit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - stage1-docs-audit
+
+jobs:
+  audit-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run audit script
+        run: python scripts/audit.py
+
+  docs-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required docs
+        run: |
+          test -f README.md
+          test -f skills.md
+          test -f RUNBOOK.md
+          test -f CODEBASE_MAP.md
+          test -f ARCHITECTURE.md
+          test -f DECISIONS.md
