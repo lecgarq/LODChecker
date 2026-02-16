@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.VITE_PUBLIC_BASE || '/',
   plugins: [react()],
   resolve: {
     alias: {

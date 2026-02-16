@@ -83,6 +83,8 @@ python tests/frontend_smoke.py
   - `audit-checks`: `scripts/audit.py`
   - `docs-checks`: required markdown files present
 - `.github/workflows/stage1-audit.yml` remains as a legacy Stage 1 gate.
+- `.github/workflows/pages.yml` deploys frontend static build to GitHub Pages from `main`.
+  - Set repository variable `LOD_BACKEND_BASE_URL` for hosted API calls.
 
 ## Performance Benchmark
 

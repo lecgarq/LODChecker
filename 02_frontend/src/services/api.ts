@@ -1,4 +1,4 @@
-import { DATA_URL, SEARCH_API } from '@/lib/constants';
+import { ANALYZE_API, DATA_URL, DELETE_IMAGE_API, PIPELINE_API, SEARCH_API } from '@/lib/constants';
 import type {
   AnalyzeBatchResponse,
   GraphDataResponse,
@@ -26,7 +26,7 @@ export async function fetchSearch(query: string): Promise<SearchResponse> {
 export async function runLocalPipeline(files: File[]): Promise<PipelineRunResponse> {
   const formData = new FormData();
   files.forEach(file => formData.append('files', file));
-  const res = await fetch('http://localhost:5000/api/run/local_pipeline', {
+  const res = await fetch(PIPELINE_API, {
     method: 'POST',
     body: formData,
   });
@@ -37,7 +37,7 @@ export async function runLocalPipeline(files: File[]): Promise<PipelineRunRespon
 }
 
 export async function fetchBatchAnalysis(payload: { lods: unknown[]; categories: unknown[] }): Promise<AnalyzeBatchResponse> {
-  const res = await fetch('/api/analyze_batch', {
+  const res = await fetch(ANALYZE_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -46,7 +46,7 @@ export async function fetchBatchAnalysis(payload: { lods: unknown[]; categories:
 }
 
 export async function deleteImage(filename: string): Promise<Response> {
-  return fetch('/api/delete/image', {
+  return fetch(DELETE_IMAGE_API, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ filename }),

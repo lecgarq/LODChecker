@@ -83,6 +83,14 @@ python scripts/benchmark_pipeline.py --input 00_data/img --runs 3 --limit 5
 - [skills.md](skills.md)
 - [ROLLBACK.md](ROLLBACK.md)
 
+## GitHub Pages
+
+Static frontend hosting is supported via `.github/workflows/pages.yml`.
+
+- Pages build uses `VITE_PUBLIC_BASE=/LODChecker/`.
+- API calls use `VITE_API_BASE_URL` (repository variable: `LOD_BACKEND_BASE_URL`).
+- If `LOD_BACKEND_BASE_URL` is not set, hosted UI loads but backend features will fail.
+
 ## Hard Constraints
 
 - Do not modify/delete `00_data/img/`
