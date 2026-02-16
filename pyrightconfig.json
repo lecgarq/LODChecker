@@ -1,0 +1,16 @@
+{
+  "venvPath": "03_env/python",
+  "venv": "imgpipe_env",
+  "extraPaths": [
+    "04_config",
+    "01_backend",
+    "01_backend/img_pipeline"
+  ],
+  "include": [
+    "run_viz.py",
+    "01_backend",
+    "04_config",
+    "scripts",
+    "tests"
+  ]
+}
