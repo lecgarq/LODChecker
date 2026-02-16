@@ -73,6 +73,11 @@ if str(BACKEND_SCHEMA_DIR) not in sys.path:
     sys.path.append(str(BACKEND_SCHEMA_DIR))
 from schemas import validate_graph_data, validate_registry_records
 
+IMG_PIPELINE_DIR = ROOT_DIR / "01_backend" / "img_pipeline"
+if str(IMG_PIPELINE_DIR) not in sys.path:
+    sys.path.append(str(IMG_PIPELINE_DIR))
+from hf_utils import hf_common_kwargs
+
 print(f"[BACKEND] Initializing server (ver 2.2 - Modular Resources, test_mode={TEST_MODE})...")
 
 BACKEND_DIR = ROOT_DIR / CFG["paths"]["backend_dir"]
@@ -165,8 +170,11 @@ class BackendResources:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
             print(f"[BACKEND] Loading SigLIP model on {self.device}...")
             siglip_model = CFG["models"]["siglip"]
-            self.model = SiglipModel.from_pretrained(siglip_model).to(self.device)
-            self.processor = SiglipProcessor.from_pretrained(siglip_model, use_fast=True)
+            hf_kwargs = hf_common_kwargs()
+            if hf_kwargs.get("local_files_only"):
+                print("[BACKEND] Network unavailable; using local_files_only=True (fail-fast).")
+            self.model = SiglipModel.from_pretrained(siglip_model, **hf_kwargs).to(self.device)
+            self.processor = SiglipProcessor.from_pretrained(siglip_model, use_fast=True, **hf_kwargs)
             print("[BACKEND] SigLIP Model loaded.")
         except Exception as exc:
             print(f"[BACKEND] Failed to load model: {exc}")

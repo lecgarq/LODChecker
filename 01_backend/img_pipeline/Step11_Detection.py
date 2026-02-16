@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from PIL import Image
 from transformers import AutoProcessor, GroundingDinoForObjectDetection, SamModel, SamProcessor
+from hf_utils import hf_common_kwargs
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
@@ -26,8 +27,11 @@ def load_gdino():
     global _GDINO_MODEL, _GDINO_PROCESSOR, _GDINO_DEVICE
     if _GDINO_MODEL is None:
         _GDINO_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-        _GDINO_PROCESSOR = AutoProcessor.from_pretrained(GDINO_MODEL_ID)
-        _GDINO_MODEL = GroundingDinoForObjectDetection.from_pretrained(GDINO_MODEL_ID).to(_GDINO_DEVICE)
+        hf_kwargs = hf_common_kwargs()
+        if hf_kwargs.get("local_files_only"):
+            print("[Step11] GDINO using local_files_only=True (fail-fast).")
+        _GDINO_PROCESSOR = AutoProcessor.from_pretrained(GDINO_MODEL_ID, **hf_kwargs)
+        _GDINO_MODEL = GroundingDinoForObjectDetection.from_pretrained(GDINO_MODEL_ID, **hf_kwargs).to(_GDINO_DEVICE)
     return _GDINO_MODEL, _GDINO_PROCESSOR
 
 def detect_taxonomy_categories(img: Image.Image, category_index: dict, box_threshold=0.3):
@@ -74,8 +78,11 @@ def load_sam():
     global _SAM_MODEL, _SAM_PROCESSOR, _SAM_DEVICE
     if _SAM_MODEL is None:
         _SAM_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-        _SAM_PROCESSOR = SamProcessor.from_pretrained(SAM_MODEL_ID)
-        _SAM_MODEL = SamModel.from_pretrained(SAM_MODEL_ID).to(_SAM_DEVICE)
+        hf_kwargs = hf_common_kwargs()
+        if hf_kwargs.get("local_files_only"):
+            print("[Step11] SAM using local_files_only=True (fail-fast).")
+        _SAM_PROCESSOR = SamProcessor.from_pretrained(SAM_MODEL_ID, **hf_kwargs)
+        _SAM_MODEL = SamModel.from_pretrained(SAM_MODEL_ID, **hf_kwargs).to(_SAM_DEVICE)
     return _SAM_MODEL, _SAM_PROCESSOR
 
 def segment_with_boxes(img: Image.Image, box: list):

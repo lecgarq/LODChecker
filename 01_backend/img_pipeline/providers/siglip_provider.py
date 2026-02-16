@@ -10,6 +10,7 @@ from sentence_transformers import SentenceTransformer
 from transformers import SiglipModel, SiglipProcessor
 
 from .embedding_provider import EmbeddingProvider
+from hf_utils import hf_common_kwargs
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 if str(ROOT_DIR) not in sys.path:
@@ -31,26 +32,29 @@ class SigLIPProvider(EmbeddingProvider):
     def load(self) -> tuple[object, object]:
         if self._model is not None:
             return self._model, self._processor
+        hf_kwargs = hf_common_kwargs()
+        if hf_kwargs.get("local_files_only"):
+            print("[SigLIP] Network unavailable; using local_files_only=True (fail-fast).")
 
         if torch.cuda.is_available():
             try:
                 self._device = "cuda"
                 print(f"[SigLIP] Loading model on {self._device}...")
-                self._processor = SiglipProcessor.from_pretrained(SIGLIP_MODEL_ID)
-                self._model = SiglipModel.from_pretrained(SIGLIP_MODEL_ID).to(self._device)
+                self._processor = SiglipProcessor.from_pretrained(SIGLIP_MODEL_ID, **hf_kwargs)
+                self._model = SiglipModel.from_pretrained(SIGLIP_MODEL_ID, **hf_kwargs).to(self._device)
                 dummy = torch.zeros(1, 3, 224, 224).to(self._device)
                 self._model.get_image_features(pixel_values=dummy)
                 print(f"[SigLIP] Validated on GPU. Mem: {torch.cuda.memory_allocated()/1024**2:.1f}MB")
             except Exception as exc:
                 print(f"[SigLIP] CUDA Init Failed: {exc}. Falling back to CPU.")
                 self._device = "cpu"
-                self._processor = SiglipProcessor.from_pretrained(SIGLIP_MODEL_ID)
-                self._model = SiglipModel.from_pretrained(SIGLIP_MODEL_ID).to(self._device)
+                self._processor = SiglipProcessor.from_pretrained(SIGLIP_MODEL_ID, **hf_kwargs)
+                self._model = SiglipModel.from_pretrained(SIGLIP_MODEL_ID, **hf_kwargs).to(self._device)
         else:
             print("[SigLIP] CUDA not available. Using CPU.")
             self._device = "cpu"
-            self._processor = SiglipProcessor.from_pretrained(SIGLIP_MODEL_ID)
-            self._model = SiglipModel.from_pretrained(SIGLIP_MODEL_ID).to(self._device)
+            self._processor = SiglipProcessor.from_pretrained(SIGLIP_MODEL_ID, **hf_kwargs)
+            self._model = SiglipModel.from_pretrained(SIGLIP_MODEL_ID, **hf_kwargs).to(self._device)
 
         self._model.eval()
         return self._model, self._processor

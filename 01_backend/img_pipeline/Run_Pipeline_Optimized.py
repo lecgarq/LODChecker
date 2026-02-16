@@ -30,6 +30,7 @@ import gc
 import shutil
 from pathlib import Path
 from datetime import datetime
+from typing import Any
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -52,6 +53,35 @@ def clean_vram():
             torch.cuda.empty_cache()
     except ImportError:
         pass
+
+
+def gpu_mem_snapshot() -> dict[str, float]:
+    try:
+        import torch
+        if not torch.cuda.is_available():
+            return {"allocated_gb": 0.0, "reserved_gb": 0.0, "max_allocated_gb": 0.0}
+        return {
+            "allocated_gb": torch.cuda.memory_allocated() / 1024**3,
+            "reserved_gb": torch.cuda.memory_reserved() / 1024**3,
+            "max_allocated_gb": torch.cuda.max_memory_allocated() / 1024**3,
+        }
+    except Exception:
+        return {"allocated_gb": 0.0, "reserved_gb": 0.0, "max_allocated_gb": 0.0}
+
+
+def log_stage_profile(stage_profiles: list[dict[str, Any]]) -> None:
+    if not stage_profiles:
+        return
+    logger.info("=== STAGE PROFILE SUMMARY ===")
+    for p in stage_profiles:
+        logger.info(
+            "[PROFILE] %s: %.2fs | GPU alloc %.2f->%.2f GB | peak %.2f GB",
+            p["name"],
+            p["seconds"],
+            p["gpu_start"]["allocated_gb"],
+            p["gpu_end"]["allocated_gb"],
+            p["gpu_end"]["max_allocated_gb"],
+        )
 
 def scan_images(input_dir, limit=None, include_folders=None):
     images = []
@@ -313,34 +343,73 @@ def main():
     cat_path = ROOT_DIR / "00_data" / "Categories.json"
     with open(cat_path) as f: cat_idx = json.load(f)
     
+    stage_profiles: list[dict[str, Any]] = []
+
     # 0. SCAN
     t0 = time.time()
+    st = time.time()
+    gpu_start = gpu_mem_snapshot()
     images = scan_images(in_dir, args.limit)
     if not images: return
-    logger.info(f"[PROFILE] Scan took {time.time()-t0:.2f}s")
+    stage_profiles.append({
+        "name": "Scan",
+        "seconds": time.time() - st,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
+    logger.info(f"[PROFILE] Scan took {time.time()-st:.2f}s")
     
     # 1. UPSCALE
     t1 = time.time()
+    gpu_start = gpu_mem_snapshot()
     upscaled_map = run_stage_upscale(images, temp_dir)
+    stage_profiles.append({
+        "name": "Stage 1 (Upscale)",
+        "seconds": time.time() - t1,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
     logger.info(f"[PROFILE] Stage 1 (Upscale) took {time.time()-t1:.2f}s")
     
     # 2. RMBG
     t2 = time.time()
+    gpu_start = gpu_mem_snapshot()
     alpha_map = run_stage_rmbg(upscaled_map, temp_dir)
+    stage_profiles.append({
+        "name": "Stage 2 (RMBG)",
+        "seconds": time.time() - t2,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
     logger.info(f"[PROFILE] Stage 2 (RMBG) took {time.time()-t2:.2f}s")
     
     # 3. CAPTION
     t3 = time.time()
+    gpu_start = gpu_mem_snapshot()
     captions = run_stage_caption(upscaled_map)
+    stage_profiles.append({
+        "name": "Stage 3 (Caption)",
+        "seconds": time.time() - t3,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
     logger.info(f"[PROFILE] Stage 3 (Caption) took {time.time()-t3:.2f}s")
     
     # 4. REFINEMENT
     t4 = time.time()
+    gpu_start = gpu_mem_snapshot()
     final_masks, detected_classes = run_stage_refinement(upscaled_map, alpha_map, temp_dir, cat_idx)
+    stage_profiles.append({
+        "name": "Stage 4 (Refinement)",
+        "seconds": time.time() - t4,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
     logger.info(f"[PROFILE] Stage 4 (Refinement) took {time.time()-t4:.2f}s")
     
     # PREPARE FINAL IMAGES for Embeddings
     t_prep = time.time()
+    gpu_start = gpu_mem_snapshot()
     final_image_paths = {}
     valid_records_data = {} # To store Lod/File size/etc for final step
     
@@ -382,14 +451,28 @@ def main():
             "processed_at": datetime.now().isoformat()
         }
     logger.info(f"[PROFILE] Image Prep took {time.time()-t_prep:.2f}s")
+    stage_profiles.append({
+        "name": "Prep Final Images",
+        "seconds": time.time() - t_prep,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
 
     # 5. EMBEDDINGS
     t5 = time.time()
+    gpu_start = gpu_mem_snapshot()
     embeddings_map = run_stage_embeddings(final_image_paths, captions)
+    stage_profiles.append({
+        "name": "Stage 5 (Embeddings)",
+        "seconds": time.time() - t5,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
     logger.info(f"[PROFILE] Stage 5 (Embeddings) took {time.time()-t5:.2f}s")
     
     # 6. FINALIZE
     t6 = time.time()
+    gpu_start = gpu_mem_snapshot()
     logger.info(">>> STAGE 6: FINALIZING <<<")
     batch_records = []
     
@@ -431,8 +514,19 @@ def main():
     
     # Cleanup
     shutil.rmtree(temp_dir, ignore_errors=True)
+    stage_profiles.append({
+        "name": "Stage 6 (Finalize)",
+        "seconds": time.time() - t6,
+        "gpu_start": gpu_start,
+        "gpu_end": gpu_mem_snapshot(),
+    })
     logger.info(f"[PROFILE] Stage 6 (Finalize) took {time.time()-t6:.2f}s")
-    logger.info(f"[PROFILE] Total Pipeline took {time.time()-t0:.2f}s")
+    total_seconds = time.time() - t0
+    logger.info(f"[PROFILE] Total Pipeline took {total_seconds:.2f}s")
+    if images:
+        per_image = total_seconds / max(len(images), 1)
+        logger.info(f"[PROFILE] Avg per-image time: {per_image:.2f}s (target: ~30s)")
+    log_stage_profile(stage_profiles)
     logger.info("PIPELINE COMPLETE")
 
 if __name__ == "__main__":

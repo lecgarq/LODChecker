@@ -41,21 +41,38 @@ def remove_background_artifacts(img: Image.Image, alpha: Image.Image):
 
 def apply_mask_to_image(img, alpha):
     rgba = img.convert("RGB")
-    rgba.putalpha(alpha.resize(rgba.size, Image.LANCZOS).convert("L"))
+    a = alpha.resize(rgba.size, Image.LANCZOS).convert("L")
+    # Light blur reduces jagged/cropped edge artifacts without changing object silhouette much.
+    a_np = np.array(a, dtype=np.uint8)
+    a_np = cv2.GaussianBlur(a_np, (3, 3), 0)
+    rgba.putalpha(Image.fromarray(a_np, "L"))
     return rgba
 
-def refine_mask_aggressive(img, alpha, detect_halo=True):
-    # 1. Boost low-confidence areas to be more inclusive
-    a_np = np.array(alpha)
-    a_np[a_np > 30] = 255 # If model thinks it's even 12% object, make it solid
-    
-    # 2. Flood fill holes
-    alpha_boosted = Image.fromarray(a_np, "L")
+def refine_mask_aggressive(img, alpha, detect_halo=True, min_retention_ratio=0.85):
+    """
+    Conservative refinement with shrinkage guard:
+    - Fill small internal holes/gaps.
+    - Preserve boundary details by reverting if mask area shrinks too much.
+    """
+    orig = np.array(alpha.convert("L"), dtype=np.uint8)
+
+    # 1) Inclusive boost: keep weak positives instead of hard erosion.
+    boosted = orig.copy()
+    boosted[boosted > 20] = 255
+
+    # 2) Fill holes on boosted mask.
+    alpha_boosted = Image.fromarray(boosted, "L")
     alpha_filled = flood_fill_background(alpha_boosted)
-    a_np = np.array(alpha_filled)
-    
-    # 3. Morph close ONLY (fill gaps). NO OPEN (which destroys small details).
-    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
-    a_np = cv2.morphologyEx(a_np, cv2.MORPH_CLOSE, k, iterations=1)
-    
-    return Image.fromarray(a_np, "L")
+    refined = np.array(alpha_filled, dtype=np.uint8)
+
+    # 3) Small close to connect tiny gaps while minimizing edge movement.
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    refined = cv2.morphologyEx(refined, cv2.MORPH_CLOSE, k, iterations=1)
+
+    # 4) Retention guard: if refinement removes too much area, keep original mask.
+    orig_fg = int(np.count_nonzero(orig > 20))
+    refined_fg = int(np.count_nonzero(refined > 20))
+    if orig_fg > 0 and refined_fg < int(orig_fg * float(min_retention_ratio)):
+        return Image.fromarray(orig, "L")
+
+    return Image.fromarray(refined, "L")
