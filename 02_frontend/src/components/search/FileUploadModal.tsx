@@ -1,7 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
-import { X, Upload, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import ResultsDashboard from './ResultsDashboard';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import { usePipelineUpload } from '@/hooks/usePipelineUpload';
+import UploadDropzone from '@/components/search/upload/UploadDropzone';
+import ProcessingOverlay from '@/components/search/upload/ProcessingOverlay';
 
 interface FileUploadModalProps {
   isOpen: boolean;
@@ -9,47 +12,10 @@ interface FileUploadModalProps {
   onLocate: (id: string) => void;
 }
 
-interface UploadStatus {
-  step: 'idle' | 'uploading' | 'processing' | 'finishing' | 'complete' | 'error';
-  message: string;
-  progress: number;
-}
-
-interface PipelineRecord {
-  id: string;
-  name_of_file: string;
-  final_category: string;
-  provider: string;
-  lod: string;
-  output_path?: string;
-  path_to_image?: string;
-}
-
-function normalizePipelineResults(raw: unknown): PipelineRecord[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
-    .map((item) => ({
-      id: String(item.id ?? ''),
-      name_of_file: String(item.name_of_file ?? 'Unknown file'),
-      final_category: String(item.final_category ?? 'Uncategorized'),
-      provider: String(item.provider ?? 'Unknown'),
-      lod: String(item.lod ?? 'N/A'),
-      output_path: typeof item.output_path === 'string' ? item.output_path : undefined,
-      path_to_image: typeof item.path_to_image === 'string' ? item.path_to_image : undefined,
-    }))
-    .filter((item) => item.id.length > 0);
-}
-
 export default function FileUploadModal({ isOpen, onClose, onLocate }: FileUploadModalProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [status, setStatus] = useState<UploadStatus>({
-    step: 'idle',
-    message: '',
-    progress: 0
-  });
-  const [pipelineResults, setPipelineResults] = useState<PipelineRecord[]>([]);
+  const { status, pipelineResults, upload, reset } = usePipelineUpload();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,57 +56,14 @@ export default function FileUploadModal({ isOpen, onClose, onLocate }: FileUploa
 
   const handleUpload = async () => {
     if (files.length === 0) return;
-
-    setStatus({ step: 'uploading', message: 'Uploading files...', progress: 10 });
-
-    const formData = new FormData();
-    files.forEach(file => {
-      formData.append('files', file);
-    });
-
-    try {
-      // 1. Upload Phase
-      const uploadRes = await fetch('http://localhost:5000/api/run/local_pipeline', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (uploadRes.status === 404 || uploadRes.status === 405) {
-        throw new Error('Backend stale. Please restart run_viz.py terminal.');
-      }
-      if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.statusText}`);
-      
-      setStatus({ step: 'processing', message: 'Running AI Vision Pipeline...', progress: 40 });
-
-      const result = await uploadRes.json();
-      
-      if (result.success) {
-        setStatus({ step: 'finishing', message: 'Finalizing Data...', progress: 90 });
-        
-        // Ensure results are available
-        const records = normalizePipelineResults(result.results);
-        setPipelineResults(records);
-
-        setTimeout(() => {
-           setStatus({ step: 'complete', message: 'Ready!', progress: 100 });
-           // Clear files for next time
-           setFiles([]);
-        }, 1000);
-      } else {
-        throw new Error(result.error || 'Pipeline failed');
-      }
-
-    } catch (error) {
-      console.error(error);
-      setStatus({ step: 'error', message: String(error), progress: 0 });
-    }
+    await upload(files);
+    setFiles([]);
   };
 
   const handleClose = () => {
     if (status.step === 'processing') return; // Prevent closing mid-process
     setFiles([]);
-    setPipelineResults([]);
-    setStatus({ step: 'idle', message: '', progress: 0 });
+    reset();
     onClose();
   };
 
@@ -192,53 +115,27 @@ export default function FileUploadModal({ isOpen, onClose, onLocate }: FileUploa
         </div>
 
         {/* Status Overlay (Processing Only) */}
-        {status.step !== 'idle' && status.step !== 'error' && status.step !== 'complete' && (
-           <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-6 animate-fade-in">
-              <div className="relative w-20 h-20">
-                 <div className="absolute inset-0 border-4 border-secondary/20 rounded-full" />
-                 <div className="absolute inset-0 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-              </div>
-              <div className="text-center">
-                 <h3 className="text-2xl font-black text-primary mb-2">Processing</h3>
-                 <p className="text-primary/60 font-medium">{status.message}</p>
-                 <div className="w-64 h-2 bg-secondary/10 rounded-full mt-4 overflow-hidden">
-                    <div className="h-full bg-accent transition-all duration-500" style={{ width: `${status.progress}%` }} />
-                 </div>
-              </div>
-           </div>
-        )}
+        <ProcessingOverlay status={status} />
 
         {/* Body */}
         <div className="p-6">
           
           {/* Dropzone */}
-          <div 
-            className={`
-              relative group flex flex-col items-center justify-center gap-4 h-64 w-full rounded-2xl border-2 border-dashed transition-all duration-300
-              ${isDragging ? 'border-accent bg-accent/5 scale-[0.99]' : 'border-secondary/30 bg-secondary/5 hover:border-accent/40 hover:bg-secondary/10'}
-            `}
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            multiple 
+            accept="image/*" 
+            onChange={handleFileSelect}
+          />
+          <UploadDropzone
+            isDragging={isDragging}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-          >
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              multiple 
-              accept="image/*" 
-              onChange={handleFileSelect}
-            />
-            
-            <div className="w-16 h-16 rounded-2xl bg-white shadow-xl flex items-center justify-center text-accent group-hover:scale-110 transition-transform duration-300">
-               <Upload size={28} strokeWidth={2.5} />
-            </div>
-            <div className="text-center">
-               <p className="text-lg font-bold text-primary mb-1">Click or Drag images here</p>
-               <p className="text-sm text-primary/40"> Supports JPG, PNG, WEBP</p>
-            </div>
-          </div>
+          />
 
           {/* File List */}
           {files.length > 0 && (

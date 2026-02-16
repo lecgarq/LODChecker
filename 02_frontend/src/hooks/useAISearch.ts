@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { SEARCH_API } from '@/lib/constants';
 import type { SearchResult } from '@/types/graph';
+import { fetchSearch } from '@/services/api';
 
 interface AISearchState {
   aiResults: SearchResult[] | null;
@@ -21,8 +21,7 @@ export function useAISearch(): AISearchState {
     }
     setIsSearching(true);
     try {
-      const res = await fetch(`${SEARCH_API}?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
+      const data = await fetchSearch(query);
       if (data.results) {
         // Show top 100 results ordered by confidence (backend sorts them)
         setAiResults(data.results.slice(0, 100));

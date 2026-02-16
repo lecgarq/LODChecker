@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { DATA_URL } from '@/lib/constants';
 import type { GraphNode } from '@/types/graph';
+import { fetchGraphData } from '@/services/api';
+import { dedupeNodes, removeNodeAndRebuildNeighbors } from '@/lib/graphNodeOps';
 
 interface GraphDataState {
   nodes: GraphNode[];
@@ -14,16 +15,10 @@ export function useGraphData(): GraphDataState {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(DATA_URL)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
+    fetchGraphData()
       .then(data => {
         if (!data?.nodes) throw new Error('Invalid data');
-        // Deduplicate nodes by ID
-        const uniqueNodes = Array.from(new Map((data.nodes as GraphNode[]).map(n => [n.id, n])).values());
-        setNodes(uniqueNodes);
+        setNodes(dedupeNodes(data.nodes as GraphNode[]));
         setLoading(false);
       })
       .catch(err => {
@@ -33,35 +28,7 @@ export function useGraphData(): GraphDataState {
   }, []);
 
   const removeNode = (id: string) => {
-    setNodes(prev => {
-      const oldIndexById = new Map<string, number>();
-      prev.forEach((n, i) => oldIndexById.set(n.id, i));
-
-      const filtered = prev.filter(n => n.id !== id);
-      const newIndexById = new Map<string, number>();
-      filtered.forEach((n, i) => newIndexById.set(n.id, i));
-
-      return filtered.map((node) => {
-        const rawNeighbors = Array.isArray(node.neighbors) ? node.neighbors : [];
-        const nextNeighbors: number[] = [];
-
-        for (const oldNeighborIndex of rawNeighbors) {
-          if (!Number.isInteger(oldNeighborIndex)) continue;
-          if (oldNeighborIndex < 0 || oldNeighborIndex >= prev.length) continue;
-
-          const oldNeighbor = prev[oldNeighborIndex];
-          if (!oldNeighbor || oldNeighbor.id === node.id) continue;
-
-          const newNeighborIndex = newIndexById.get(oldNeighbor.id);
-          if (newNeighborIndex === undefined) continue;
-          if (nextNeighbors.includes(newNeighborIndex)) continue;
-
-          nextNeighbors.push(newNeighborIndex);
-        }
-
-        return { ...node, neighbors: nextNeighbors };
-      });
-    });
+    setNodes(prev => removeNodeAndRebuildNeighbors(prev, id));
   };
 
   return { nodes, loading, removeNode };

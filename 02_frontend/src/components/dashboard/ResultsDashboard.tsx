@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X, Info } from 'lucide-react';
 import { getCategoryColor } from '@/lib/colors';
+import { fetchBatchAnalysis } from '@/services/api';
 
 interface ResultRecord {
     id?: string;
@@ -77,12 +78,7 @@ const ResultsDashboard = ({ results, onClose, onLocate }: ResultsDashboardProps)
                 lods: safeResults.map(r => r.lod || r.lod_label),
                 categories: safeResults.map(r => r.final_category || r.category)
             };
-            const res = await fetch('/api/analyze_batch', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
+            const data = await fetchBatchAnalysis(payload);
             setAnalysis(data.analysis);
         } catch (e) {
             console.error("Analysis failed", e);

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { getCategoryColor } from '@/lib/colors';
-import { getLodLabel } from '@/lib/helpers';
 import type { GraphNode, LayoutMode } from '@/types/graph';
+import { CANVAS_COLORS } from './graphConstants';
+import { buildActiveLinks, getLayoutGroupingKey, getSafeNeighbors, isValidNodeIndex } from './graphUtils';
 
 interface SemanticGraphProps {
   nodes: GraphNode[];
@@ -11,16 +12,6 @@ interface SemanticGraphProps {
   layoutMode: LayoutMode;
   onStabilized?: () => void;
 }
-
-// Canvas rendering colors (can't use Tailwind in Canvas 2D)
-const CANVAS_COLORS = {
-  bg: '#F8F7F4',
-  secondary: '#E9E7E2',
-  text: '#1A1A1A',
-  radius: '12px',
-  radiusSm: '8px',
-  font: "'Google Sans', 'Inter', system-ui, -apple-system, sans-serif",
-} as const;
 
 const SemanticGraph = ({
   nodes,
@@ -102,22 +93,7 @@ const SemanticGraph = ({
     return counts;
   }, [nodes]);
 
-  const activeLinks = useMemo(() => {
-    if (layoutMode !== 'similarity') return new Uint32Array(0);
-    const links: number[] = [];
-    const indexSet = new Set(activeIndices);
-    for (const i of activeIndices) {
-      const node = nodes[i];
-      if (!node.neighbors) continue;
-      const limit = Math.min(node.neighbors.length, 10);
-      for (let k = 0; k < limit; k++) {
-        const tIdx = node.neighbors[k];
-        if (!Number.isInteger(tIdx) || tIdx < 0 || tIdx >= nodes.length) continue;
-        if (indexSet.has(tIdx)) links.push(i, tIdx);
-      }
-    }
-    return new Uint32Array(links);
-  }, [nodes, activeIndices, layoutMode]);
+  const activeLinks = useMemo(() => buildActiveLinks(nodes, activeIndices, layoutMode), [nodes, activeIndices, layoutMode]);
 
   const updateGrid = useCallback(() => {
     const g = grid.current;
@@ -245,10 +221,7 @@ const SemanticGraph = ({
             targets[i * 2 + 1] = nodes[i].y ?? 0;
           }
         } else {
-          let keyFn: (n: GraphNode) => string;
-          if (layoutMode === 'category') keyFn = n => n.final_category ?? '';
-          else if (layoutMode === 'lod') keyFn = n => getLodLabel(n.lod_label);
-          else keyFn = n => n.provider || 'Unknown';
+          const keyFn = getLayoutGroupingKey(layoutMode);
 
           const groups = new Map<string, number[]>();
           for (const i of activeIndices) {
@@ -366,15 +339,10 @@ const SemanticGraph = ({
       const curSelectedId = selectedNodeIdRef.current;
       if (curSelectedId) {
         selectedIdx = nodeIndexMap.get(curSelectedId) ?? -1;
-        if (selectedIdx !== -1) {
+        if (isValidNodeIndex(selectedIdx, nodes.length)) {
           highlightSet.add(selectedIdx);
-          const nb = nodes[selectedIdx].neighbors;
-          if (nb) {
-            for (let i = 0; i < Math.min(nb.length, 10); i++) {
-              const nIdx = nb[i];
-              if (!Number.isInteger(nIdx) || nIdx < 0 || nIdx >= nodes.length) continue;
-              highlightSet.add(nIdx);
-            }
+          for (const nIdx of getSafeNeighbors(nodes[selectedIdx], nodes.length, 10)) {
+            highlightSet.add(nIdx);
           }
         }
       }
@@ -394,20 +362,14 @@ const SemanticGraph = ({
 
         if (hasSelection) {
           ctx.globalAlpha = 0.8;
-          const nb = nodes[selectedIdx].neighbors;
-          if (nb) {
-            const limit = Math.min(nb.length, 10);
-            const c = getCategoryColor(nodes[selectedIdx].final_category);
-            ctx.strokeStyle = c;
-            ctx.beginPath();
-            for (let i = 0; i < limit; i++) {
-              const t = nb[i];
-              if (!Number.isInteger(t) || t < 0 || t >= nodes.length) continue;
-              ctx.moveTo(pos[selectedIdx * 2], pos[selectedIdx * 2 + 1]);
-              ctx.lineTo(pos[t * 2], pos[t * 2 + 1]);
-            }
-            ctx.stroke();
+          const c = getCategoryColor(nodes[selectedIdx].final_category);
+          ctx.strokeStyle = c;
+          ctx.beginPath();
+          for (const t of getSafeNeighbors(nodes[selectedIdx], nodes.length, 10)) {
+            ctx.moveTo(pos[selectedIdx * 2], pos[selectedIdx * 2 + 1]);
+            ctx.lineTo(pos[t * 2], pos[t * 2 + 1]);
           }
+          ctx.stroke();
         } else if (links.length > 0) {
           ctx.globalAlpha = 0.07;
           // Optimization: If too many links, only draw a subset or skip entirely in motion
@@ -526,16 +488,9 @@ const SemanticGraph = ({
     const curSelectedId = selectedNodeIdRef.current;
     if (curSelectedId) {
       const idx = nodeIndexMap.get(curSelectedId);
-      if (idx !== undefined && idx >= 0 && idx < nodes.length) {
+      if (idx !== undefined && isValidNodeIndex(idx, nodes.length)) {
         interactiveSet.add(idx);
-        const nb = nodes[idx].neighbors;
-        if (nb) {
-          for (let i = 0; i < Math.min(nb.length, 10); i++) {
-            const nIdx = nb[i];
-            if (!Number.isInteger(nIdx) || nIdx < 0 || nIdx >= nodes.length) continue;
-            interactiveSet.add(nIdx);
-          }
-        }
+        for (const nIdx of getSafeNeighbors(nodes[idx], nodes.length, 10)) interactiveSet.add(nIdx);
       }
     } else {
       activeIndices.forEach(idx => interactiveSet.add(idx));
