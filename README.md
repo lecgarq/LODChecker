@@ -24,10 +24,11 @@ The 5-stage refactor is implemented in the current codebase:
 git clone https://github.com/lecgarq/LODChecker
 cd LODChecker
 
-cd 01_backend
+cd 03_env\python
 python -m venv imgpipe_env
 .\imgpipe_env\Scripts\Activate.ps1
-pip install -r ..\requirements.txt
+pip install -r ..\..\requirements.txt
+cd ..
 cd ..
 
 cd 02_frontend

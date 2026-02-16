@@ -11,6 +11,9 @@ from pathlib import Path
 
 # Config bootstrap
 ROOT_DIR = Path(__file__).resolve().parent.parent
+CONFIG_ROOT = ROOT_DIR / "04_config"
+if str(CONFIG_ROOT) not in sys.path:
+    sys.path.append(str(CONFIG_ROOT))
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 

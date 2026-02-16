@@ -50,8 +50,8 @@ Modularity introduced:
 - schema validators: `01_backend/schemas.py`
 
 Config source of truth:
-- `config/default.yaml`
-- loaded via `config/loader.py`
+- `04_config/config/default.yaml`
+- loaded via `04_config/config/loader.py`
 - overridable with `LOD_*` env vars
 
 ## Data Contracts

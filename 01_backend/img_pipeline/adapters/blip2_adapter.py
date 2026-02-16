@@ -7,6 +7,9 @@ import torch
 from transformers import Blip2ForConditionalGeneration, Blip2Processor
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
+CONFIG_ROOT = ROOT_DIR / "04_config"
+if str(CONFIG_ROOT) not in sys.path:
+    sys.path.insert(0, str(CONFIG_ROOT))
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 from config import load_config

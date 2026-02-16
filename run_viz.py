@@ -21,6 +21,9 @@ from flask_cors import CORS
 # AUTO-RELAUNCH: Ensure we run inside the imgpipe_env venv (CUDA + all deps)
 # ------------------------------------------------------------------------------
 ROOT_DIR = Path(__file__).resolve().parent
+CONFIG_ROOT = ROOT_DIR / "04_config"
+if str(CONFIG_ROOT) not in sys.path:
+    sys.path.append(str(CONFIG_ROOT))
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 from config import load_config

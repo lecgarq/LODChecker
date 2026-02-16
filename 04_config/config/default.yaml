@@ -10,7 +10,7 @@
     "graph_prep": "01_backend/img_pipeline/Step13_GraphPrep.py",
     "backend_dir": "01_backend",
     "frontend_dir": "02_frontend",
-    "venv_python_windows": "01_backend/imgpipe_env/Scripts/python.exe"
+    "venv_python_windows": "03_env/python/imgpipe_env/Scripts/python.exe"
   },
   "models": {
     "siglip": "google/siglip-base-patch16-224",

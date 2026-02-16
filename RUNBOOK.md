@@ -22,10 +22,11 @@ OPENAI_MODEL=gpt-4
 ## Setup
 
 ```powershell
-cd 01_backend
+cd 03_env\python
 python -m venv imgpipe_env
 .\imgpipe_env\Scripts\Activate.ps1
-pip install -r ..\requirements.txt
+pip install -r ..\..\requirements.txt
+cd ..
 cd ..
 
 cd 02_frontend
@@ -47,14 +48,14 @@ This is the primary supported runtime mode.
 ## Run Pipeline Only
 
 ```powershell
-01_backend\imgpipe_env\Scripts\python.exe 01_backend\img_pipeline\Run_Pipeline_Optimized.py --input <input_dir> --output 00_data --provider <provider_name>
+03_env\python\imgpipe_env\Scripts\python.exe 01_backend\img_pipeline\Run_Pipeline_Optimized.py --input <input_dir> --output 00_data --provider <provider_name>
 ```
 
 Then consolidate + rebuild graph:
 
 ```powershell
-01_backend\imgpipe_env\Scripts\python.exe 01_backend\img_pipeline\Step09_DataTools.py --root 00_data --consolidate
-01_backend\imgpipe_env\Scripts\python.exe 01_backend\img_pipeline\Step13_GraphPrep.py
+03_env\python\imgpipe_env\Scripts\python.exe 01_backend\img_pipeline\Step09_DataTools.py --root 00_data --consolidate
+03_env\python\imgpipe_env\Scripts\python.exe 01_backend\img_pipeline\Step13_GraphPrep.py
 ```
 
 ## Validation Commands

@@ -15,13 +15,13 @@ def find_repo_root(start_path: Path | None = None) -> Path:
         current = current.parent
 
     for candidate in [current, *current.parents]:
-        if (candidate / "config" / "default.yaml").exists():
+        if (candidate / "04_config" / "config" / "default.yaml").exists():
             return candidate
-    raise FileNotFoundError("Could not locate repo root containing config/default.yaml")
+    raise FileNotFoundError("Could not locate repo root containing 04_config/config/default.yaml")
 
 
 def _read_default_config(repo_root: Path) -> dict[str, Any]:
-    config_path = repo_root / "config" / "default.yaml"
+    config_path = repo_root / "04_config" / "config" / "default.yaml"
     return json.loads(config_path.read_text(encoding="utf-8"))
 
 

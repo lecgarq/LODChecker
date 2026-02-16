@@ -6,8 +6,9 @@ This map is intentionally focused on maintained source paths (not virtualenv/nod
 
 - `run_viz.py`: launcher + Flask API + backend resource holder
 - `requirements.txt`: Python deps
-- `config/default.yaml`: centralized paths/models config (JSON content in `.yaml` file)
-- `config/loader.py`: config loader + env overrides + repo-root resolution
+- `04_config/config/default.yaml`: centralized paths/models config (JSON content in `.yaml` file)
+- `04_config/config/loader.py`: config loader + env overrides + repo-root resolution
+- `03_env/`: local environment area (venvs, local runtime artifacts; git-ignored except placeholders)
 - `scripts/audit.py`: Stage 1 audit checks
 - `scripts/benchmark_pipeline.py`: runtime benchmark helper
 - `tests/`: Stage 5 harness/smoke tests
@@ -22,7 +23,8 @@ This map is intentionally focused on maintained source paths (not virtualenv/nod
 ## Backend + Pipeline
 
 - `01_backend/schemas.py`: pydantic schemas + validators for registry/graph contracts
-- `01_backend/run_ui.py`: tkinter local pipeline UI launcher
+- `01_backend/_legacy/run_ui.py`: legacy tkinter launcher (quarantined)
+- `01_backend/_legacy/dotnet-install.ps1`: legacy helper script (quarantined)
 - `01_backend/img_pipeline/Run_Pipeline_Optimized.py`: canonical orchestrator
 - `01_backend/img_pipeline/Run_Pipeline.py`: legacy orchestrator (deprecated)
 - `01_backend/img_pipeline/Step01_*.py` ... `Step13_*.py`: pipeline stages and helpers
@@ -46,6 +48,7 @@ This map is intentionally focused on maintained source paths (not virtualenv/nod
 - `02_frontend/src/services/api.ts`: frontend API client helpers
 - `02_frontend/src/types/`: API/graph contracts
 - `02_frontend/vite.config.ts`: dev proxy + `@` alias to `src`
+- `02_frontend/_legacy/ResultsDashboard.dashboard.tsx`: quarantined unused dashboard variant
 
 ## Testing and CI
 

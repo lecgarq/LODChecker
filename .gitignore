@@ -61,18 +61,26 @@ Desktop.ini
 
 # PowerShell
 *.ps1
+!01_backend/_legacy/*.ps1
 
 # Claude
 .claude/memory/
 
 # LOD Checker Stage 1 required ignores
 01_backend/imgpipe_env/
+03_env/
+03_env/**
+!03_env/
+!03_env/.gitkeep
+!03_env/python/
+!03_env/python/.gitkeep
 .env
 node_modules/
 02_frontend/dist/
 __pycache__/
 *.pyc
 00_data/img/
+00_data/img/**
 00_data/vectors/
 !00_data/vectors/
 00_data/vectors/*

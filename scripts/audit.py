@@ -38,6 +38,8 @@ REQUIRED_FOLDERS = [
     "00_data",
     "01_backend",
     "02_frontend",
+    "03_env",
+    "04_config",
     "scripts",
 ]
 
@@ -90,6 +92,7 @@ def iter_code_files() -> list[Path]:
     code_targets = [
         REPO_ROOT / "run_viz.py",
         REPO_ROOT / "01_backend",
+        REPO_ROOT / "04_config",
     ]
     files: list[Path] = []
     for target in code_targets:
