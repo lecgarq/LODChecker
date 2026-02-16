@@ -23,43 +23,12 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(ROOT_DIR))
 
-from config import load_config
-
-from transformers import Blip2Processor, Blip2ForConditionalGeneration
-
-CFG = load_config(ROOT_DIR)
-BLIP2_MODEL_ID = CFG["models"]["blip2"]
+from adapters.blip2_adapter import load_blip2_model
 
 
 def load_blip2():
-    """Load BLIP-2 model on GPU with FP16, fallback to CPU (FP32)"""
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model_name = BLIP2_MODEL_ID
-    processor = Blip2Processor.from_pretrained(model_name)
-    
-    try:
-        # Use FP16 on GPU for reduced VRAM
-        if device == "cuda":
-            model = Blip2ForConditionalGeneration.from_pretrained(
-                model_name,
-                torch_dtype=torch.float16
-            )
-            model = model.to(device)
-            # Test allocation
-            torch.zeros(1).to(device)
-            torch.cuda.synchronize()
-        else:
-            model = Blip2ForConditionalGeneration.from_pretrained(model_name)
-            model = model.to(device)
-            
-    except RuntimeError as e:
-        print(f"[BLIP2] Warning: CUDA failed ({e}), falling back to CPU (slower)")
-        device = "cpu"
-        model = Blip2ForConditionalGeneration.from_pretrained(model_name)
-        model = model.to(device)
-    
-    model.eval()
-    return model, processor, device
+    """Load BLIP-2 model using adapter (GPU with fallback)."""
+    return load_blip2_model()
 
 
 def generate_caption(model, processor, device, img: Image.Image) -> str:

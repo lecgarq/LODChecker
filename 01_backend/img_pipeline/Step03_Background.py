@@ -21,43 +21,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT_DIR))
 
-from config import load_config
-
-from transformers import AutoModelForImageSegmentation
 from torchvision import transforms
-
-CFG = load_config(ROOT_DIR)
-RMBG_MODEL_ID = CFG["models"]["rmbg"]
+from adapters.rmbg_adapter import load_rmbg_model
 
 
 def load_rmbg():
-    """Load BRIA RMBG model on GPU with CPU fallback"""
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    try:
-        model = AutoModelForImageSegmentation.from_pretrained(
-            RMBG_MODEL_ID,
-            trust_remote_code=True
-        )
-        model = model.to(device)
-        
-        # Test inference if CUDA
-        if device == "cuda":
-            dummy = torch.zeros(1, 3, 1024, 1024).to(device)
-            model(dummy)
-            torch.cuda.synchronize()  # Force check for async errors
-            
-    except RuntimeError as e:
-        print(f"[RMBG] Warning: CUDA failed ({e}), falling back to CPU")
-        device = "cpu"
-        model = AutoModelForImageSegmentation.from_pretrained(
-            RMBG_MODEL_ID,
-            trust_remote_code=True
-        )
-        model = model.to(device)
-        
-    model.eval()
-    return model, device
+    """Load BRIA RMBG model via adapter."""
+    return load_rmbg_model()
 
 
 def process_image(model, device, img_path: Path) -> Image.Image:
