@@ -1,0 +1,14 @@
+# Core Dependencies
+flask
+flask-cors
+numpy
+torch
+transformers
+pillow
+openai
+python-dotenv
+pydantic
+tqdm
+
+# Optional (for development)
+# Add any other dependencies here

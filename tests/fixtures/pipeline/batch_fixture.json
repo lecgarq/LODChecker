@@ -1,0 +1,26 @@
+[
+  {
+    "id": "fixture-001",
+    "name_of_file": "fixture-001.png",
+    "original_path": "C:/fixtures/input/fixture-001.png",
+    "output_path": "C:/fixtures/output/img/fixture-001.png",
+    "provider": "FixtureProvider",
+    "final_category": "Doors",
+    "lod": 200,
+    "lod_label": "Medium",
+    "image_embedding": [0.1, 0.2, 0.3, 0.4],
+    "text_embedding": [0.2, 0.1, 0.4, 0.3]
+  },
+  {
+    "id": "fixture-002",
+    "name_of_file": "fixture-002.png",
+    "original_path": "C:/fixtures/input/fixture-002.png",
+    "output_path": "C:/fixtures/output/img/fixture-002.png",
+    "provider": "FixtureProvider",
+    "final_category": "Windows",
+    "lod": 300,
+    "lod_label": "Medium-High",
+    "image_embedding": [0.4, 0.3, 0.2, 0.1],
+    "text_embedding": [0.3, 0.4, 0.1, 0.2]
+  }
+]

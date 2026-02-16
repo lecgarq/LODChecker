@@ -1,0 +1,73 @@
+/* Font loaded via index.html <link> for faster rendering */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Custom Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes shimmerText {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes glowPulse {
+  0%, 100% { text-shadow: 0 0 10px rgba(18, 18, 18, 0.1); }
+  50% { text-shadow: 0 0 25px rgba(18, 18, 18, 0.2), 0 0 45px rgba(255, 122, 69, 0.1); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pingCustom {
+  0% { transform: scale(1); opacity: 0.8; }
+  70%, 100% { transform: scale(2.5); opacity: 0; }
+}
+
+.animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.2, 1, 0.2, 1) forwards; }
+.animate-fade-down { animation: fadeDown 0.4s cubic-bezier(0.2, 1, 0.2, 1) forwards; }
+.animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.2, 1, 0.2, 1) forwards; }
+.animate-shimmer-text {
+  animation: shimmerText 3s infinite linear;
+}
+.animate-glow-pulse {
+  animation: glowPulse 4s infinite ease-in-out;
+}
+.animate-ping-custom { animation: pingCustom 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+/* ── Global Base (via Tailwind @layer) ── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body, #root {
+    @apply w-full h-full overflow-hidden font-sans antialiased;
+    background: theme('colors.bg');
+    color: theme('colors.text');
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-300/60 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-gray-400/80; }
+
+  /* Details Marker */
+  details > summary { list-style: none; cursor: pointer; outline: none; }
+  details > summary::-webkit-details-marker { display: none; }
+}

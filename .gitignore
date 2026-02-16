@@ -77,3 +77,10 @@ __pycache__/
 !00_data/vectors/
 00_data/vectors/*
 !00_data/vectors/.gitkeep
+
+# Test temp artifacts
+tests/.tmp/
+
+# Frontend source lib folder must be tracked
+!02_frontend/src/lib/
+!02_frontend/src/lib/*.ts
