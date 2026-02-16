@@ -323,6 +323,11 @@ def _serve_image_from_data(path):
     return send_from_directory(img_dir, path)
 
 
+def _serve_thumbnail_from_data(path):
+    thumb_dir = DATA_DIR_ROOT / "img" / "thumb"
+    return send_from_directory(thumb_dir, path)
+
+
 @app.route("/img/<path:path>")
 def serve_image(path):
     return _serve_image_from_data(path)
@@ -330,7 +335,39 @@ def serve_image(path):
 
 @app.route("/img/thumb/<path:path>")
 def serve_thumbnail(path):
-    return _serve_image_from_data(path)
+    return _serve_thumbnail_from_data(path)
+
+
+def _rebuild_graph_neighbors_after_deletion(nodes: list[dict], kept_indices: list[int]) -> list[dict]:
+    old_to_new: dict[int, int] = {old_idx: new_idx for new_idx, old_idx in enumerate(kept_indices)}
+    rebuilt_nodes: list[dict] = []
+
+    for old_idx in kept_indices:
+        node = dict(nodes[old_idx])
+        raw_neighbors = node.get("neighbors", [])
+        if not isinstance(raw_neighbors, list):
+            raw_neighbors = []
+
+        remapped_neighbors: list[int] = []
+        seen: set[int] = set()
+        for neighbor_idx in raw_neighbors:
+            if not isinstance(neighbor_idx, int):
+                continue
+            new_neighbor_idx = old_to_new.get(neighbor_idx)
+            if new_neighbor_idx is None:
+                continue
+            if new_neighbor_idx == old_to_new[old_idx]:
+                continue
+            if new_neighbor_idx in seen:
+                continue
+            seen.add(new_neighbor_idx)
+            remapped_neighbors.append(new_neighbor_idx)
+
+        node["neighbors"] = remapped_neighbors
+        node["idx"] = old_to_new[old_idx]
+        rebuilt_nodes.append(node)
+
+    return rebuilt_nodes
 
 
 @app.route("/api/analyze_batch", methods=["POST"])
@@ -500,15 +537,16 @@ def delete_image():
             if skipped:
                 print(f"[DELETE] Schema validation skipped {skipped} invalid graph nodes.")
             nodes = graph_data.get("nodes", [])
-            new_nodes = [n for n in nodes if not str(n.get("img", "")).endswith(f"/{filename}")]
-            if len(new_nodes) < len(nodes):
+            kept_indices = [i for i, node in enumerate(nodes) if not str(node.get("img", "")).endswith(f"/{filename}")]
+            if len(kept_indices) < len(nodes):
+                new_nodes = _rebuild_graph_neighbors_after_deletion(nodes, kept_indices)
                 graph_data["nodes"] = new_nodes
                 if "meta" not in graph_data or not isinstance(graph_data["meta"], dict):
                     graph_data["meta"] = {}
                 graph_data["meta"]["count"] = len(new_nodes)
                 with open(GRAPH_FILE, "w", encoding="utf-8") as f:
                     json.dump(graph_data, f)
-                print("[DELETE] Removed from graph_data.json")
+                print("[DELETE] Removed from graph_data.json and rebuilt neighbor indices")
 
         removed_from_memory = resources.remove_from_memory(filename)
         return jsonify(
