@@ -27,8 +27,9 @@ from config import load_config
 
 CFG = load_config(ROOT_DIR)
 VENV_PYTHON = ROOT_DIR / CFG["paths"]["venv_python_windows"]
+TEST_MODE = os.getenv("LOD_BACKEND_TEST_MODE", "0") == "1"
 
-if VENV_PYTHON.exists() and Path(sys.executable).resolve() != VENV_PYTHON.resolve():
+if not TEST_MODE and VENV_PYTHON.exists() and Path(sys.executable).resolve() != VENV_PYTHON.resolve():
     print("[LAUNCHER] Re-launching with venv Python for CUDA support...")
     print(f"           {VENV_PYTHON}")
     sys.exit(subprocess.call([str(VENV_PYTHON), __file__] + sys.argv[1:]))
@@ -36,25 +37,34 @@ if VENV_PYTHON.exists() and Path(sys.executable).resolve() != VENV_PYTHON.resolv
 # ------------------------------------------------------------------------------
 # Runtime imports
 # ------------------------------------------------------------------------------
-try:
-    import torch
-    from transformers import SiglipModel, SiglipProcessor
-except ImportError:
-    print("[BACKEND] ERROR: 'transformers' or 'torch' not found.")
-    sys.exit(1)
+if TEST_MODE:
+    torch = None  # type: ignore[assignment]
+    SiglipModel = None  # type: ignore[assignment]
+    SiglipProcessor = None  # type: ignore[assignment]
 
-try:
-    from PIL import Image  # noqa: F401
-except ImportError:
-    print("[BACKEND] PIL (Pillow) not found. Installing...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "Pillow"])
+    class OpenAI:  # type: ignore[override]
+        def __init__(self, *args, **kwargs):
+            pass
+else:
+    try:
+        import torch
+        from transformers import SiglipModel, SiglipProcessor
+    except ImportError:
+        print("[BACKEND] ERROR: 'transformers' or 'torch' not found.")
+        sys.exit(1)
 
-try:
-    from openai import OpenAI
-except ImportError:
-    print("[BACKEND] OpenAI module not found. Installing...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "openai"])
-    from openai import OpenAI
+    try:
+        from PIL import Image  # noqa: F401
+    except ImportError:
+        print("[BACKEND] PIL (Pillow) not found. Installing...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "Pillow"])
+
+    try:
+        from openai import OpenAI
+    except ImportError:
+        print("[BACKEND] OpenAI module not found. Installing...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "openai"])
+        from openai import OpenAI
 
 from dotenv import load_dotenv
 
@@ -63,7 +73,7 @@ if str(BACKEND_SCHEMA_DIR) not in sys.path:
     sys.path.append(str(BACKEND_SCHEMA_DIR))
 from schemas import validate_graph_data, validate_registry_records
 
-print("[BACKEND] Initializing server (ver 2.2 - Modular Resources)...")
+print(f"[BACKEND] Initializing server (ver 2.2 - Modular Resources, test_mode={TEST_MODE})...")
 
 BACKEND_DIR = ROOT_DIR / CFG["paths"]["backend_dir"]
 DATA_DIR_ROOT = ROOT_DIR / CFG["paths"]["data_root"]
@@ -145,6 +155,12 @@ class BackendResources:
         print(f"[BACKEND] Loaded {len(self.registry)} records with embeddings (dim={self.embeddings.shape[1]}).")
 
     def _load_siglip(self) -> None:
+        if TEST_MODE:
+            self.device = "cpu"
+            self.model = object()
+            self.processor = object()
+            print("[BACKEND] Test mode active: skipping SigLIP model load.")
+            return
         try:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
             print(f"[BACKEND] Loading SigLIP model on {self.device}...")

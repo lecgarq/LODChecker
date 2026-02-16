@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "count": 2,
+    "umap": {
+      "metric": "cosine",
+      "n_neighbors": 15,
+      "min_dist": 0.1,
+      "seed": 42
+    },
+    "knn": {
+      "k": 2,
+      "metric": "cosine",
+      "seed": 42
+    },
+    "bounds": {
+      "x": [-1, 1],
+      "y": [-1, 1]
+    }
+  },
+  "nodes": [
+    {
+      "idx": 0,
+      "id": "fixture-001",
+      "x": 0.1,
+      "y": 0.2,
+      "neighbors": [1],
+      "img": "/img/fixture-001.png",
+      "name": "Fixture One",
+      "final_category": "Doors",
+      "lod_label": "Medium",
+      "provider": "FixtureProvider"
+    },
+    {
+      "idx": 1,
+      "id": "fixture-002",
+      "x": -0.1,
+      "y": -0.2,
+      "neighbors": [0],
+      "img": "/img/fixture-002.png",
+      "name": "Fixture Two",
+      "final_category": "Windows",
+      "lod_label": "Medium-High",
+      "provider": "FixtureProvider"
+    }
+  ]
+}

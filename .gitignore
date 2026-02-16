@@ -77,3 +77,6 @@ __pycache__/
 !00_data/vectors/
 00_data/vectors/*
 !00_data/vectors/.gitkeep
+
+# Test temp artifacts
+tests/.tmp/
