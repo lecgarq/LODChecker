@@ -42,6 +42,8 @@ python run_viz.py
 - Backend: `http://localhost:5000`
 - Frontend: `http://localhost:5173`
 
+This is the primary supported runtime mode.
+
 ## Run Pipeline Only
 
 ```powershell
@@ -85,6 +87,8 @@ python tests/frontend_smoke.py
 - `.github/workflows/stage1-audit.yml` remains as a legacy Stage 1 gate.
 - `.github/workflows/pages.yml` deploys frontend static build to GitHub Pages from `main`.
   - Set repository variable `LOD_BACKEND_BASE_URL` for hosted API calls.
+  - If `LOD_BACKEND_BASE_URL` is empty, Pages UI loads but backend-dependent features fail with 404.
+  - `http://localhost:5000` is valid only for local runtime, not for public GitHub Pages clients.
 
 ## Performance Benchmark
 

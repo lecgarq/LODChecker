@@ -51,6 +51,12 @@ python run_viz.py
 - Backend: `http://localhost:5000`
 - Frontend (dev): `http://localhost:5173`
 
+## Current Deployment Mode
+
+The active/expected mode is local full-stack via `run_viz.py`:
+- frontend on `localhost:5173`
+- backend on `localhost:5000`
+
 ## Core Commands
 
 ```powershell
@@ -89,7 +95,8 @@ Static frontend hosting is supported via `.github/workflows/pages.yml`.
 
 - Pages build uses `VITE_PUBLIC_BASE=/LODChecker/`.
 - API calls use `VITE_API_BASE_URL` (repository variable: `LOD_BACKEND_BASE_URL`).
-- If `LOD_BACKEND_BASE_URL` is not set, hosted UI loads but backend features will fail.
+- If `LOD_BACKEND_BASE_URL` is not set, hosted UI loads but backend features fail (`/api/*`, `/vectors/*` 404).
+- `localhost` cannot be used as backend for public GitHub Pages visitors.
 
 ## Hard Constraints
 
