@@ -1,0 +1,24 @@
+{
+  "paths": {
+    "data_root": "00_data",
+    "vectors_dir": "00_data/vectors",
+    "images_dir": "00_data/img",
+    "categories_json": "00_data/Categories.json",
+    "pipeline_optimized": "01_backend/img_pipeline/Run_Pipeline_Optimized.py",
+    "pipeline_legacy": "01_backend/img_pipeline/Run_Pipeline.py",
+    "data_tools": "01_backend/img_pipeline/Step09_DataTools.py",
+    "graph_prep": "01_backend/img_pipeline/Step13_GraphPrep.py",
+    "backend_dir": "01_backend",
+    "frontend_dir": "02_frontend",
+    "venv_python_windows": "01_backend/imgpipe_env/Scripts/python.exe"
+  },
+  "models": {
+    "siglip": "google/siglip-base-patch16-224",
+    "blip2": "Salesforce/blip2-opt-2.7b",
+    "rmbg": "briaai/RMBG-1.4",
+    "gdino": "IDEA-Research/grounding-dino-tiny",
+    "sam": "facebook/sam-vit-huge",
+    "sentence_transformer": "sentence-transformers/all-MiniLM-L6-v2",
+    "openai_model": "gpt-4"
+  }
+}

@@ -23,6 +23,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ABSOLUTE_ROOT_LITERAL = r"C:\LECG\LOD Checker"
+ABSOLUTE_ROOT_LITERAL_ALT = "C:/LECG/LOD Checker"
 
 REQUIRED_DOCS = [
     "README.md",
@@ -85,14 +86,37 @@ def iter_repo_files() -> list[Path]:
     return files
 
 
+def iter_code_files() -> list[Path]:
+    code_targets = [
+        REPO_ROOT / "run_viz.py",
+        REPO_ROOT / "01_backend",
+    ]
+    files: list[Path] = []
+    for target in code_targets:
+        if target.is_file() and is_text_candidate(target):
+            files.append(target)
+            continue
+        if not target.exists():
+            continue
+        for path in target.rglob("*"):
+            if not path.is_file():
+                continue
+            if any(part in {"imgpipe_env", "__pycache__", ".git"} for part in path.parts):
+                continue
+            if is_text_candidate(path):
+                files.append(path)
+    return files
+
+
 def count_hardcoded_root_refs() -> int:
     count = 0
-    for path in iter_repo_files():
+    for path in iter_code_files():
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
         count += text.count(ABSOLUTE_ROOT_LITERAL)
+        count += text.count(ABSOLUTE_ROOT_LITERAL_ALT)
     return count
 
 
