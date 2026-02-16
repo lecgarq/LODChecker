@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from flask import Flask, jsonify, request, send_from_directory
@@ -40,14 +41,21 @@ if not TEST_MODE and VENV_PYTHON.exists() and Path(sys.executable).resolve() != 
 # ------------------------------------------------------------------------------
 # Runtime imports
 # ------------------------------------------------------------------------------
+torch: Any
+SiglipModel: Any
+SiglipProcessor: Any
+OpenAI: Any
+
 if TEST_MODE:
     torch = None  # type: ignore[assignment]
     SiglipModel = None  # type: ignore[assignment]
     SiglipProcessor = None  # type: ignore[assignment]
 
-    class OpenAI:  # type: ignore[override]
+    class DummyOpenAIClient:
         def __init__(self, *args, **kwargs):
             pass
+
+    OpenAI = DummyOpenAIClient
 else:
     try:
         import torch
@@ -105,9 +113,9 @@ if not OPENAI_API_KEY:
 
 class BackendResources:
     def __init__(self) -> None:
-        self.model = None
-        self.processor = None
-        self.embeddings = None
+        self.model: Any = None
+        self.processor: Any = None
+        self.embeddings: np.ndarray | None = None
         self.registry: list[dict] = []
         self.device = "cpu"
         self.query_cache: dict[str, str] = {}
@@ -215,6 +223,9 @@ class BackendResources:
             return user_query
 
     def search(self, query: str) -> dict:
+        if self.model is None or self.processor is None or self.embeddings is None:
+            raise RuntimeError("Search resources are not loaded.")
+
         refined_query = self.expand_query(query)
         print(f"[BACKEND] Searching for: {refined_query}")
 
