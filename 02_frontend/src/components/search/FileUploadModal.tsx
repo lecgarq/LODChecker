@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { X, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { X, AlertCircle, Sparkles } from 'lucide-react';
 import ResultsDashboard from './ResultsDashboard';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { usePipelineUpload } from '@/hooks/usePipelineUpload';

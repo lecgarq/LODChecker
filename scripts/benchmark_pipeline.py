@@ -11,7 +11,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PIPELINE = REPO_ROOT / "01_backend" / "img_pipeline" / "Run_Pipeline_Optimized.py"
-VENV_PY = REPO_ROOT / "01_backend" / "imgpipe_env" / "Scripts" / "python.exe"
+VENV_PY = REPO_ROOT / "03_env" / "python" / "imgpipe_env" / "Scripts" / "python.exe"
 
 
 def run_once(input_dir: Path, output_dir: Path, limit: int, provider: str) -> tuple[int, float]:

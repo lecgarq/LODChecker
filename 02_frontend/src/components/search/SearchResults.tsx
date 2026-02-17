@@ -3,7 +3,7 @@ import type { GraphNode, SearchResult } from '@/types/graph';
 import { getNodeImageUrl } from '@/lib/helpers';
 import { getCategoryColor } from '@/lib/colors';
 import DetailImage from '@/components/ui/DetailImage';
-import { ChevronLeft, ChevronRight, Filter, Layers, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Layers } from 'lucide-react';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -156,7 +156,7 @@ function renderItem(
     res: SearchResult, 
     nodes: GraphNode[], 
     onSelectNode: (n: GraphNode) => void, 
-    onClose: () => void,
+    _onClose: () => void,
     setHovered: (v: { node: GraphNode, top: number } | null) => void,
     isTop10: boolean
 ) {

@@ -44,6 +44,7 @@ const SemanticGraph = ({
   const rafId = useRef<number | null>(null);
   const isAnimating = useRef(false);
   const prevLayoutMode = useRef(layoutMode);
+  const prevActiveIndicesKey = useRef('');
 
   const sprites = useRef(new Map<string, HTMLCanvasElement>());
 
@@ -77,20 +78,19 @@ const SemanticGraph = ({
   const activeIndices = useMemo(() => {
     return filteredIndices || nodes.map((_, i) => i);
   }, [nodes, filteredIndices]);
+  const activeIndicesKey = useMemo(() => {
+    let hash = 2166136261;
+    for (const idx of activeIndices) {
+      hash ^= idx + 1;
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    return `${activeIndices.length}-${hash >>> 0}`;
+  }, [activeIndices]);
 
   const nodeIndexMap = useMemo(() => {
     const map = new Map<string, number>();
     nodes.forEach((n, i) => map.set(n.id, i));
     return map;
-  }, [nodes]);
-
-  const _categoryCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    nodes.forEach(n => {
-      const cat = n.final_category ?? '';
-      counts.set(cat, (counts.get(cat) || 0) + 1);
-    });
-    return counts;
   }, [nodes]);
 
   const activeLinks = useMemo(() => buildActiveLinks(nodes, activeIndices, layoutMode), [nodes, activeIndices, layoutMode]);
@@ -200,20 +200,23 @@ const SemanticGraph = ({
     }
 
     const modeChanged = prevLayoutMode.current !== layoutMode;
+    const activeSetChanged = prevActiveIndicesKey.current !== activeIndicesKey;
     prevLayoutMode.current = layoutMode;
+    prevActiveIndicesKey.current = activeIndicesKey;
+    const layoutCacheKey = layoutMode === 'similarity' ? layoutMode : `${layoutMode}:${activeIndicesKey}`;
 
-    if (modeChanged || sizeChanged || !isReady) {
-      if (layoutCache.current.has(layoutMode)) {
-        const cached = layoutCache.current.get(layoutMode)!;
+    if (modeChanged || activeSetChanged || sizeChanged || !isReady) {
+      if (layoutCache.current.has(layoutCacheKey)) {
+        const cached = layoutCache.current.get(layoutCacheKey)!;
         if (cached.length === targetPositions.current.length) {
           targetPositions.current.set(cached);
         } else {
           // Cache invalid due to node count change
-          layoutCache.current.delete(layoutMode);
+          layoutCache.current.delete(layoutCacheKey);
         }
       } 
       
-      if (!layoutCache.current.has(layoutMode)) {
+      if (!layoutCache.current.has(layoutCacheKey)) {
         const targets = new Float32Array(count * 2);
         if (layoutMode === 'similarity') {
           for (let i = 0; i < count; i++) {
@@ -244,7 +247,7 @@ const SemanticGraph = ({
             }
           });
         }
-        layoutCache.current.set(layoutMode, targets);
+        layoutCache.current.set(layoutCacheKey, targets);
         targetPositions.current.set(targets);
       }
 
@@ -271,7 +274,7 @@ const SemanticGraph = ({
         }, 100);
       });
     }
-  }, [nodes, activeIndices, layoutMode, isReady, updateGrid, zoomToFit, onStabilized]);
+  }, [nodes, activeIndices, activeIndicesKey, layoutMode, isReady, updateGrid, zoomToFit, onStabilized]);
 
   // Automated Focus: Zoom to fit whenever selection changes
   useEffect(() => {

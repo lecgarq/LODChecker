@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle, ExternalLink, Image as ImageIcon, MapPin } from 'lucide-react';
+import { CheckCircle, Image as ImageIcon, MapPin } from 'lucide-react';
 import { useCallback } from 'react';
 
 interface PipelineRecord {

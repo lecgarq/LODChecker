@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Plus, ArrowRight, Images, ChevronRight } from 'lucide-react';
+import { Plus, ArrowRight, Images } from 'lucide-react';
 import ACCLogo from '@/assets/Autodesk-Symbol.png';
 import FileUploadModal from './FileUploadModal';
 
@@ -42,7 +42,7 @@ export default function LandingSearch({ onSearch, onSelectNode }: LandingSearchP
           LOD Checker
         </h1>
         <div className="h-[20px] overflow-hidden">
-           <p className="text-sm font-medium text-text/40 animate-slide-in-right opacity-0 transition-opacity duration-300 group-hover:text-primary/60" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+           <p className="text-sm font-medium text-text/40 opacity-0 transition-opacity duration-300 group-hover:text-primary/60" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
              AI-Powered BIM Intelligence
            </p>
         </div>
@@ -58,7 +58,7 @@ export default function LandingSearch({ onSearch, onSelectNode }: LandingSearchP
           }`}
         >
           {/* Animated Border Gradient */}
-          <div className={`absolute -inset-[1px] rounded-[18px] bg-gradient-to-r from-primary via-accent to-primary opacity-0 transition-opacity duration-500 -z-10 blur-sm ${isFocused ? 'opacity-40 animate-shimmer' : ''}`} />
+          <div className={`absolute -inset-[1px] rounded-[18px] bg-gradient-to-r from-primary via-accent to-primary opacity-0 transition-opacity duration-500 -z-10 blur-sm ${isFocused ? 'opacity-40' : ''}`} />
           <div className={`absolute -inset-[1px] rounded-[18px] bg-white transition-all duration-300 -z-10 border ${isFocused ? 'border-transparent' : 'border-secondary'}`} />
 
           {/* Leading Icon Toggle */}

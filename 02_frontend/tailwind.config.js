@@ -23,20 +23,6 @@ export default {
       fontFamily: {
         sans: ["'Google Sans'", "'Inter'", 'system-ui', '-apple-system', 'sans-serif'],
       },
-      keyframes: {
-        fadeUp: {
-          from: { opacity: '0', transform: 'translateY(6px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
-        scaleIn: {
-          from: { opacity: '0', transform: 'scale(0.95)' },
-          to: { opacity: '1', transform: 'scale(1)' },
-        },
-      },
-      animation: {
-        'fade-up': 'fadeUp 0.2s ease',
-        'scale-in': 'scaleIn 0.2s ease',
-      },
     },
   },
   plugins: [],

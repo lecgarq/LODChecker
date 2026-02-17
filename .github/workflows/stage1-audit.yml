@@ -1,3 +1,6 @@
+# DEPRECATED: Superseded by ci.yml audit-checks and docs-checks jobs.
+# Branch 'stage1-docs-audit' no longer exists.
+# Quarantine candidate after main branch CI confirmed green.
 name: stage1-audit
 
 on:

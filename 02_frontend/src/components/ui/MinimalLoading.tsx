@@ -16,6 +16,7 @@ export default function MinimalLoading({ isSearching, isGraphStable, onSwipeStar
   const [isReady, setIsReady] = useState(false);
   const [shouldExit, setShouldExit] = useState(false);
   const hasStartedSearch = useRef(false);
+  // eslint-disable-next-line react-hooks/purity -- Date.now() in useRef is intentional: captures mount time, not render output
   const startTime = useRef(Date.now());
 
   // Track if search has actually begun
