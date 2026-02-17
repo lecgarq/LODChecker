@@ -85,7 +85,7 @@ python tests/frontend_smoke.py
   - `backend-checks`: compileall, pipeline fixture tester, backend smoke
   - `audit-checks`: `scripts/audit.py`
   - `docs-checks`: required markdown files present
-- `.github/workflows/stage1-audit.yml` remains as a legacy Stage 1 gate.
+- `.github/workflows/stage1-audit.yml` deprecated — superseded by ci.yml audit-checks and docs-checks jobs.
 - `.github/workflows/pages.yml` deploys frontend static build to GitHub Pages from `main`.
   - Set repository variable `LOD_BACKEND_BASE_URL` for hosted API calls.
   - If `LOD_BACKEND_BASE_URL` is empty, Pages UI loads but backend-dependent features fail with 404.

@@ -85,7 +85,7 @@ Local tests:
 
 CI:
 - `.github/workflows/ci.yml` with frontend, backend, audit, docs jobs
-- `.github/workflows/stage1-audit.yml` retained as Stage 1 workflow
+- `.github/workflows/stage1-audit.yml` deprecated — superseded by ci.yml
 
 ## Constraints
 

@@ -23,10 +23,8 @@ This map is intentionally focused on maintained source paths (not virtualenv/nod
 ## Backend + Pipeline
 
 - `01_backend/schemas.py`: pydantic schemas + validators for registry/graph contracts
-- `01_backend/_legacy/run_ui.py`: legacy tkinter launcher (quarantined)
-- `01_backend/_legacy/dotnet-install.ps1`: legacy helper script (quarantined)
 - `01_backend/img_pipeline/Run_Pipeline_Optimized.py`: canonical orchestrator
-- `01_backend/img_pipeline/Run_Pipeline.py`: legacy orchestrator (deprecated)
+- `01_backend/img_pipeline/Run_Pipeline.py`: legacy orchestrator (deprecated shim)
 - `01_backend/img_pipeline/Step01_*.py` ... `Step13_*.py`: pipeline stages and helpers
 - `01_backend/img_pipeline/hf_utils.py`: HF connectivity/local-only fail-fast behavior
 - `01_backend/img_pipeline/providers/embedding_provider.py`: embedding interface
@@ -48,7 +46,6 @@ This map is intentionally focused on maintained source paths (not virtualenv/nod
 - `02_frontend/src/services/api.ts`: frontend API client helpers
 - `02_frontend/src/types/`: API/graph contracts
 - `02_frontend/vite.config.ts`: dev proxy + `@` alias to `src`
-- `02_frontend/_legacy/ResultsDashboard.dashboard.tsx`: quarantined unused dashboard variant
 
 ## Testing and CI
 
@@ -56,4 +53,5 @@ This map is intentionally focused on maintained source paths (not virtualenv/nod
 - `tests/backend_smoke.py`: backend JSON contract smoke tests
 - `tests/frontend_smoke.py`: build artifact smoke check
 - `.github/workflows/ci.yml`: multi-job PR/main CI gates
-- `.github/workflows/stage1-audit.yml`: Stage 1 audit/docs legacy workflow
+- `.github/workflows/stage1-audit.yml`: deprecated — superseded by ci.yml
+- `agents/`: agent spec files (CLAUDE_CODE_PLAN, CODEX_5_3_EXECUTION, GEMINI_3_FLASH_UX)

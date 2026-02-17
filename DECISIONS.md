@@ -58,6 +58,6 @@ This log captures active architectural decisions in the current mainline state.
 
 ## ADR-010: Non-destructive rollback policy
 
-- Decision: use `git revert` stage-by-stage (`ROLLBACK.md`) instead of history rewriting.
+- Decision: use `git revert` per commit instead of history rewriting.
 - Why: predictable recovery on `main` with auditable rollback commits.
-- Consequence: rollback operations are explicit and testable after each revert.
+- Consequence: each phase is one commit; rollback is `git revert HEAD` per phase.

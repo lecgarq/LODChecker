@@ -85,10 +85,8 @@ python scripts/benchmark_pipeline.py --input 00_data/img --runs 3 --limit 5
 - [RUNBOOK.md](RUNBOOK.md)
 - [CODEBASE_MAP.md](CODEBASE_MAP.md)
 - [ARCHITECTURE.md](ARCHITECTURE.md)
-- [ARCHITECTURE_MAP.md](ARCHITECTURE_MAP.md)
 - [DECISIONS.md](DECISIONS.md)
 - [skills.md](skills.md)
-- [ROLLBACK.md](ROLLBACK.md)
 
 ## GitHub Pages
 
